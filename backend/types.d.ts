@@ -9,5 +9,6 @@ export interface IncomingDraw {
     payload: {
         x: number;
         y: number;
+        color: string;
     };
 }

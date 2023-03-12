@@ -1,9 +1,12 @@
 import React, {useEffect, useRef, useState} from "react";
-import {DrawCoordinate, IncomingMessage} from "./types";
+import AppToolbar from "./components/MUI/AppToolbar/AppToolbar";
 import './App.css'
+import {DrawCoordinate, IncomingMessage} from "./types";
 
 function App() {
     const [draws, setDraws] = useState<DrawCoordinate[]>([]);
+    const [color, setColor] = useState('');
+
     const ws = useRef<null | WebSocket>(null);
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;
     const ctx = canvas?.getContext('2d')!;
@@ -38,16 +41,25 @@ function App() {
             payload: {
                 x: e.nativeEvent.offsetX - 5,
                 y: e.nativeEvent.offsetY - 5,
+                color,
             },
         }));
     };
 
     for (let i = 0; i < draws.length; i++) {
         ctx.fillRect(draws[i].x, draws[i].y, 10, 10);
+        ctx.fillStyle = draws[i].color;
     }
 
+    const onColorClick = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setColor(e.target.value);
+    };
+
     return (
-            <canvas id='canvas' className='canvas' width='800' height='800' onClick={onCanvasClick}/>
+        <>
+            <AppToolbar value={color} onChangeColor={onColorClick}/>
+            <canvas id='canvas' width='600' height='600' onClick={onCanvasClick}/>
+        </>
     )
 }
 

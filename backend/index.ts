@@ -22,13 +22,40 @@ router.ws('/canvas', (ws, req) => {
         const decodeMessage = JSON.parse(draw.toString()) as IncomingDraw;
 
         switch (decodeMessage.type) {
-            case 'SEND_DRAW':
+            case 'SEND_DOT':
                 Object.keys(activeConnections).forEach(id => {
                     const conn = activeConnections[id];
                     conn.send(JSON.stringify({
-                        type: 'SEND_DRAWS',
+                        type: 'SEND_DOTS',
                         payload: decodeMessage.payload,
-                    }))
+                    }));
+                });
+                break;
+            case 'SEND_SQUARE':
+                Object.keys(activeConnections).forEach(id => {
+                    const conn = activeConnections[id];
+                    conn.send(JSON.stringify({
+                        type: 'SEND_SQUARES',
+                        payload: decodeMessage.payload,
+                    }));
+                });
+                break;
+            case 'SEND_CIRCLE':
+                Object.keys(activeConnections).forEach(id => {
+                    const conn = activeConnections[id];
+                    conn.send(JSON.stringify({
+                        type: 'SEND_CIRCLES',
+                        payload: decodeMessage.payload,
+                    }));
+                });
+                break;
+            case 'SEND_LINE':
+                Object.keys(activeConnections).forEach(id => {
+                    const conn = activeConnections[id];
+                    conn.send(JSON.stringify({
+                        type: 'SEND_LINES',
+                        payload: decodeMessage.payload,
+                    }));
                 });
                 break;
             default:

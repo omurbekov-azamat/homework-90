@@ -8,6 +8,7 @@ import SquareOutlinedIcon from '@mui/icons-material/SquareOutlined';
 import StackedLineChartOutlinedIcon from '@mui/icons-material/StackedLineChartOutlined';
 import CircleIcon from '@mui/icons-material/Circle';
 import AutoFixNormalOutlinedIcon from '@mui/icons-material/AutoFixNormalOutlined';
+import BrushOutlinedIcon from '@mui/icons-material/BrushOutlined';
 
 interface Props {
     value: string;
@@ -17,13 +18,23 @@ interface Props {
     onChooseCircle: (circle: string) => void;
     onChooseLine: (line: string) => void;
     onEraseDrawing: (erase: string) => void;
+    onBrushChoose: (brush: string) => void;
 }
 
-const AppToolbar: React.FC<Props> = ({value, onChangeColor, onChooseDot, onChooseSquare, onChooseCircle, onChooseLine, onEraseDrawing}) => {
+const AppToolbar: React.FC<Props> = ({
+                                         value,
+                                         onChangeColor,
+                                         onChooseDot,
+                                         onChooseSquare,
+                                         onChooseCircle,
+                                         onChooseLine,
+                                         onEraseDrawing,
+                                         onBrushChoose
+                                     }) => {
     return (
         <AppBar position="static" color='inherit' sx={{mb: 2}}>
             <Toolbar>
-                <Container maxWidth='sm'>
+                <Container maxWidth='lg'>
                     <Grid container alignItems='center'>
                         <Grid item xs>
                             <Grid container direction='row' alignItems='center'>
@@ -56,6 +67,11 @@ const AppToolbar: React.FC<Props> = ({value, onChangeColor, onChooseDot, onChoos
                         <Grid item xs>
                             <Button onClick={() => onChooseLine('line')}>
                                 <StackedLineChartOutlinedIcon sx={{color: 'black'}}/>
+                            </Button>
+                        </Grid>
+                        <Grid item xs>
+                            <Button onClick={() => onBrushChoose('brush')}>
+                                <BrushOutlinedIcon sx={{color: 'gold'}}/>
                             </Button>
                         </Grid>
                         <Grid item xs>

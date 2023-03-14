@@ -1,15 +1,18 @@
 import React, {useEffect, useRef, useState} from "react";
 import AppToolbar from "./components/MUI/AppToolbar/AppToolbar";
 import './App.css'
-import {DrawCoordinate, IncomingALL, IncomingMessage} from "./types";
+import {IncomingALL, IncomingMessage, Tools} from "./types";
 
 function App() {
     const [color, setColor] = useState('');
     const [tools, setTools] = useState('dot');
-    const [dots, setDots] = useState<DrawCoordinate[]>([]);
-    const [squares, setSquares] = useState<DrawCoordinate[]>([]);
-    const [circles, setCircles] = useState<DrawCoordinate[]>([]);
-    const [lines, setLines] = useState<DrawCoordinate[]>([]);
+    const [draws, setDraws] = useState<Tools>({
+        dots: [],
+        squares: [],
+        circles: [],
+        lines: [],
+        brushes: [],
+    });
 
     const ws = useRef<null | WebSocket>(null);
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;
@@ -29,31 +32,38 @@ function App() {
                 if (Array.isArray(decodeMessage.payload)) {
                     decodeMessage.payload.forEach(item => {
                         if (item.type === 'SEND_DOT') {
-                            setDots(prev => [...prev, item.payload]);
+                            setDraws(prev => ({...prev, dots: [...prev.dots, item.payload]}));
                         }
                         if (item.type === 'SEND_SQUARE') {
-                            setSquares(prev => [...prev, item.payload]);
+                            setDraws(prev => ({...prev, squares: [...prev.squares, item.payload]}));
                         }
                         if (item.type === 'SEND_CIRCLE') {
-                            setCircles(prev => [...prev, item.payload]);
+                            setDraws(prev => ({...prev, circles: [...prev.circles, item.payload]}));
                         }
                         if (item.type === 'SEND_LINE') {
-                            setLines(prev => [...prev, item.payload]);
+                            setDraws(prev => ({...prev, lines: [...prev.lines, item.payload]}));
+                        }
+                        if (item.type === 'SEND_BRUSH') {
+                            setDraws(prev => ({...prev, brushes: [...prev.brushes, item.payload]}));
                         }
                     });
                 }
             }
+
             if (decodeMessage.type === 'SEND_DOTS') {
-                setDots(prev => [...prev, decodeMessage.payload]);
+                setDraws(prevState => ({...prevState, dots: [...prevState.dots, decodeMessage.payload]}));
             }
             if (decodeMessage.type === 'SEND_SQUARES') {
-                setSquares(prev => [...prev, decodeMessage.payload]);
+                setDraws(prevState => ({...prevState, squares: [...prevState.squares, decodeMessage.payload]}));
             }
             if (decodeMessage.type === 'SEND_CIRCLES') {
-                setCircles(prev => [...prev, decodeMessage.payload]);
+                setDraws(prevState => ({...prevState, circles: [...prevState.circles, decodeMessage.payload]}));
             }
             if (decodeMessage.type === 'SEND_LINES') {
-                setLines(prev => [...prev, decodeMessage.payload]);
+                setDraws(prevState => ({...prevState, lines: [...prevState.lines, decodeMessage.payload]}));
+            }
+            if (decodeMessage.type === 'SEND_BRUSHES') {
+                setDraws(prevState => ({...prevState, brushes: [...prevState.brushes, decodeMessage.payload]}));
             }
         };
 
@@ -63,6 +73,7 @@ function App() {
             }
         };
     }, []);
+
 
     const onCanvasClick = (e: React.MouseEvent) => {
         if (!ws.current) return;
@@ -132,12 +143,33 @@ function App() {
         setTools(line);
     };
 
+    const onBrushChoose = (brush: string) => {
+        setTools(brush);
+    };
+
+    const onMouseMove = (e: React.MouseEvent) => {
+        if (!ws.current) return;
+        if (tools === 'brush') {
+            ws.current.send(JSON.stringify({
+                type: 'SEND_BRUSH',
+                payload: {
+                    x: e.nativeEvent.offsetX,
+                    y: e.nativeEvent.offsetY,
+                    color,
+                }
+            }));
+        }
+    };
+
     const onEraseDrawing = (erase: string) => {
         ctx.clearRect(10, 10, canvas.width, canvas.height);
-        setDots([]);
-        setSquares([]);
-        setCircles([]);
-        setLines([]);
+        setDraws({
+            dots: [],
+            squares: [],
+            circles: [],
+            lines: [],
+            brushes: [],
+        });
         if (!ws.current) return;
         ws.current.send(JSON.stringify({
             type: erase + '_DRAWS',
@@ -145,27 +177,33 @@ function App() {
         }));
     };
 
-    dots.forEach(dot => {
+    draws.dots.forEach(dot => {
         ctx.fillRect(dot.x, dot.y, 10, 10);
         ctx.fillStyle = dot.color;
     });
 
-    squares.forEach(square => {
+    draws.squares.forEach(square => {
         ctx.strokeRect(square.x, square.y, 50, 50);
         ctx.strokeStyle = square.color;
     });
 
-    circles.forEach(circle => {
+    draws.circles.forEach(circle => {
         ctx.beginPath();
         ctx.arc(circle.x, circle.y, 30, 0, 2 * Math.PI, false);
         ctx.fill();
         ctx.fillStyle = circle.color;
     });
 
-    lines.forEach(line => {
+    draws.lines.forEach(line => {
         ctx.lineTo(line.x, line.y);
         ctx.stroke();
         ctx.strokeStyle = line.color;
+    });
+
+    draws.brushes.forEach(brush => {
+        ctx.lineTo(brush.x, brush.y);
+        ctx.stroke();
+        ctx.strokeStyle = brush.color;
     });
 
     return (
@@ -178,8 +216,9 @@ function App() {
                 onChooseCircle={onChooseCircle}
                 onChooseLine={onChooseLine}
                 onEraseDrawing={onEraseDrawing}
+                onBrushChoose={onBrushChoose}
             />
-            <canvas id='canvas' width='800' height='600' onClick={onCanvasClick}/>
+            <canvas id='canvas' width='800' height='600' onClick={onCanvasClick} onMouseMove={onMouseMove}/>
         </>
     )
 }

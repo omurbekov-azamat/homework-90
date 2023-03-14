@@ -61,6 +61,15 @@ router.ws('/canvas', (ws, req) => {
                     }));
                 });
                 break;
+            case 'SEND_BRUSH':
+                Object.keys(activeConnections).forEach(id => {
+                    const conn = activeConnections[id];
+                    conn.send(JSON.stringify({
+                        type: 'SEND_BRUSHES',
+                        payload: decodeMessage.payload,
+                    }));
+                });
+                break;
             case 'ERASE_DRAWS':
                 draws = [];
                 break;

@@ -12,15 +12,18 @@ app.use(cors());
 const router = express.Router();
 
 const activeConnections: ActiveConnections = {};
+let draws: IncomingDraw[] = [];
 
 router.ws('/canvas', (ws, req) => {
     const id = crypto.randomUUID();
     console.log('Client connected! id=', id);
     activeConnections[id] = ws;
 
+    ws.send(JSON.stringify({type: "SEND_ALL", payload: draws}));
+
     ws.on('message', (draw) => {
         const decodeMessage = JSON.parse(draw.toString()) as IncomingDraw;
-
+        draws.push(decodeMessage);
         switch (decodeMessage.type) {
             case 'SEND_DOT':
                 Object.keys(activeConnections).forEach(id => {
@@ -57,6 +60,9 @@ router.ws('/canvas', (ws, req) => {
                         payload: decodeMessage.payload,
                     }));
                 });
+                break;
+            case 'ERASE_DRAWS':
+                draws = [];
                 break;
             default:
                 console.log('Unknown type', decodeMessage.type);

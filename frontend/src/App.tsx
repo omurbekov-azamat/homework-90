@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from "react";
 import AppToolbar from "./components/MUI/AppToolbar/AppToolbar";
 import './App.css'
-import {DrawCoordinate, IncomingMessage} from "./types";
+import {DrawCoordinate, IncomingALL, IncomingMessage} from "./types";
 
 function App() {
     const [color, setColor] = useState('');
@@ -23,7 +23,26 @@ function App() {
         };
 
         ws.current.onmessage = (event) => {
-            const decodeMessage = JSON.parse(event.data) as IncomingMessage;
+            const decodeMessage = JSON.parse(event.data) as IncomingMessage | IncomingALL;
+
+            if (decodeMessage.type === 'SEND_ALL') {
+                if (Array.isArray(decodeMessage.payload)) {
+                    decodeMessage.payload.forEach(item => {
+                        if (item.type === 'SEND_DOT') {
+                            setDots(prev => [...prev, item.payload]);
+                        }
+                        if (item.type === 'SEND_SQUARE') {
+                            setSquares(prev => [...prev, item.payload]);
+                        }
+                        if (item.type === 'SEND_CIRCLE') {
+                            setCircles(prev => [...prev, item.payload]);
+                        }
+                        if (item.type === 'SEND_LINE') {
+                            setLines(prev => [...prev, item.payload]);
+                        }
+                    });
+                }
+            }
             if (decodeMessage.type === 'SEND_DOTS') {
                 setDots(prev => [...prev, decodeMessage.payload]);
             }
@@ -43,7 +62,7 @@ function App() {
                 ws.current?.close();
             }
         };
-    });
+    }, []);
 
     const onCanvasClick = (e: React.MouseEvent) => {
         if (!ws.current) return;
@@ -113,28 +132,41 @@ function App() {
         setTools(line);
     };
 
-    for (let i = 0; i < dots.length; i++) {
-        ctx.fillRect(dots[i].x, dots[i].y, 10, 10);
-        ctx.fillStyle = dots[i].color;
-    }
+    const onEraseDrawing = (erase: string) => {
+        ctx.clearRect(10, 10, canvas.width, canvas.height);
+        setDots([]);
+        setSquares([]);
+        setCircles([]);
+        setLines([]);
+        if (!ws.current) return;
+        ws.current.send(JSON.stringify({
+            type: erase + '_DRAWS',
+            payload: erase,
+        }));
+    };
 
-    for (let i = 0; i < squares.length; i++) {
-        ctx.strokeRect(squares[i].x,squares[i].y,50,50);
-        ctx.strokeStyle = squares[i].color;
-    }
+    dots.forEach(dot => {
+        ctx.fillRect(dot.x, dot.y, 10, 10);
+        ctx.fillStyle = dot.color;
+    });
 
-    for (let i = 0; i < circles.length; i++) {
+    squares.forEach(square => {
+        ctx.strokeRect(square.x, square.y, 50, 50);
+        ctx.strokeStyle = square.color;
+    });
+
+    circles.forEach(circle => {
         ctx.beginPath();
-        ctx.arc(circles[i].x, circles[i].y, 30, 0, 2 * Math.PI, false);
+        ctx.arc(circle.x, circle.y, 30, 0, 2 * Math.PI, false);
         ctx.fill();
-        ctx.fillStyle = circles[i].color;
-    }
+        ctx.fillStyle = circle.color;
+    });
 
-    for (let i = 0; i < lines.length; i++) {
-        ctx.lineTo(lines[i].x, lines[i].y);
+    lines.forEach(line => {
+        ctx.lineTo(line.x, line.y);
         ctx.stroke();
-        ctx.strokeStyle = lines[i].color;
-    }
+        ctx.strokeStyle = line.color;
+    });
 
     return (
         <>
@@ -145,6 +177,7 @@ function App() {
                 onChooseSquare={onChooseSquare}
                 onChooseCircle={onChooseCircle}
                 onChooseLine={onChooseLine}
+                onEraseDrawing={onEraseDrawing}
             />
             <canvas id='canvas' width='800' height='600' onClick={onCanvasClick}/>
         </>

@@ -7,6 +7,7 @@ import StopIcon from '@mui/icons-material/Stop';
 import SquareOutlinedIcon from '@mui/icons-material/SquareOutlined';
 import StackedLineChartOutlinedIcon from '@mui/icons-material/StackedLineChartOutlined';
 import CircleIcon from '@mui/icons-material/Circle';
+import AutoFixNormalOutlinedIcon from '@mui/icons-material/AutoFixNormalOutlined';
 
 interface Props {
     value: string;
@@ -15,9 +16,10 @@ interface Props {
     onChooseSquare: (square: string) => void;
     onChooseCircle: (circle: string) => void;
     onChooseLine: (line: string) => void;
+    onEraseDrawing: (erase: string) => void;
 }
 
-const AppToolbar: React.FC<Props> = ({value, onChangeColor, onChooseDot, onChooseSquare, onChooseCircle, onChooseLine}) => {
+const AppToolbar: React.FC<Props> = ({value, onChangeColor, onChooseDot, onChooseSquare, onChooseCircle, onChooseLine, onEraseDrawing}) => {
     return (
         <AppBar position="static" color='inherit' sx={{mb: 2}}>
             <Toolbar>
@@ -54,6 +56,11 @@ const AppToolbar: React.FC<Props> = ({value, onChangeColor, onChooseDot, onChoos
                         <Grid item xs>
                             <Button onClick={() => onChooseLine('line')}>
                                 <StackedLineChartOutlinedIcon sx={{color: 'black'}}/>
+                            </Button>
+                        </Grid>
+                        <Grid item xs>
+                            <Button onClick={() => onEraseDrawing('ERASE')}>
+                                <AutoFixNormalOutlinedIcon sx={{color: 'lightcoral'}}/>
                             </Button>
                         </Grid>
                     </Grid>
